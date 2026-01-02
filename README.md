@@ -1,127 +1,262 @@
-# claude-plugin-template
+# rust-lsp
 
-A ready-to-fork template for building a **Claude Code “plugin”** using:
+A Claude Code plugin providing comprehensive Rust development support through:
 
-- **Claude Code project assets**: `.claude/commands`, `.claude/hooks`, `.claude/settings.json`
-- **MCP server** (Model Context Protocol) in **TypeScript** using stdio transport
-- **Team automation** in `.github/` (CI, templates, Copilot prompts/instructions)
+- **rust-analyzer LSP** integration for IDE-like features
+- **16 automated hooks** for code quality, security, and analysis
+- **Cargo tool ecosystem** integration
 
-## Quickstart
-
-```bash
-npm install
-npm run typecheck
-npm run build
-```
-
-Run the MCP server locally:
+## Quick Setup
 
 ```bash
-npm run dev
-# or
-npm run start
+# Run the setup command (after installing the plugin)
+/setup
 ```
 
-## Fork checklist (rename it once)
-
-- Rename the package in `package.json` and the server name/version in `src/index.ts`.
-- Update the `.mcp.json` server key (`mcpServers.<name>`) to match.
-
-## Using with Claude Code (recommended)
-
-1) Build the server:
+Or manually:
 
 ```bash
-npm run build
+# Install rust-analyzer
+rustup component add rust-analyzer
+
+# Install nightly toolchain (required for some tools)
+rustup toolchain install nightly
+
+# Install all cargo tools
+cargo install cargo-audit cargo-deny cargo-outdated cargo-machete \
+              cargo-semver-checks cargo-geiger cargo-expand cargo-bloat \
+              cargo-mutants && \
+cargo +nightly install cargo-udeps
 ```
 
-2) Ensure `.mcp.json` exists at repo root (it does in this template):
+## Features
+
+### LSP Integration
+
+The plugin configures rust-analyzer for Claude Code via `.lsp.json`:
 
 ```json
 {
-  "mcpServers": {
-    "claude-plugin-template": {
-      "type": "stdio",
-      "command": "node",
-      "args": ["dist/index.js"],
-      "env": {}
+    "rust": {
+        "command": "rust-analyzer",
+        "args": [],
+        "extensionToLanguage": { ".rs": "rust" },
+        "transport": "stdio"
     }
-  }
 }
 ```
 
-3) Add/enable the MCP server in Claude Code.
+**Capabilities:**
+- Go to definition / references
+- Hover documentation
+- Code actions and quick fixes
+- Workspace symbol search
+- Real-time diagnostics
 
-If you use the CLI, the flow is typically:
+### Automated Hooks
+
+All hooks run `afterWrite` and are configured in `hooks/hooks.json`.
+
+#### Core Rust Hooks
+
+| Hook | Trigger | Description |
+|------|---------|-------------|
+| `rust-format-on-edit` | `**/*.rs` | Auto-format with `rustfmt` |
+| `rust-check-on-edit` | `**/*.rs` | Compile check with `cargo check` |
+| `rust-clippy-on-edit` | `**/*.rs` | Lint with `cargo clippy` |
+| `rust-test-compile-on-edit` | `**/*.rs` | Verify tests compile (`cargo test --no-run`) |
+
+#### Documentation & Quality
+
+| Hook | Trigger | Description |
+|------|---------|-------------|
+| `rust-doc-check` | `**/src/**/*.rs` | Check rustdoc for warnings/errors |
+| `rust-todo-fixme` | `**/*.rs` | Surface TODO/FIXME/XXX/HACK comments |
+| `rust-unsafe-detector` | `**/*.rs` | Flag `unsafe` blocks for review |
+
+#### Dependency Management
+
+| Hook | Trigger | Tool Required | Description |
+|------|---------|---------------|-------------|
+| `rust-audit` | `**/Cargo.lock` | `cargo-audit` | CVE vulnerability scanning |
+| `rust-deny-check` | `**/Cargo.toml` | `cargo-deny` | License/security policy enforcement |
+| `rust-outdated` | `**/Cargo.toml` | `cargo-outdated` | Check for outdated dependencies |
+| `rust-machete` | `**/Cargo.toml` | `cargo-machete` | Fast unused dependency detection |
+| `rust-unused-deps` | `**/Cargo.toml` | `cargo-udeps` | Thorough unused dependency check (nightly) |
+
+#### Advanced Analysis
+
+| Hook | Trigger | Tool Required | Description |
+|------|---------|---------------|-------------|
+| `rust-semver-check` | `**/src/lib.rs` | `cargo-semver-checks` | API compatibility verification |
+| `rust-geiger` | `**/Cargo.toml` | `cargo-geiger` | Unsafe code ratio in dependencies |
+
+#### Contextual Hints
+
+| Hook | Trigger | Description |
+|------|---------|-------------|
+| `rust-mutants-hint` | `**/src/**/*.rs` | Suggests mutation testing when available |
+| `rust-bloat-hint` | `**/Cargo.toml` | Suggests binary size analysis |
+| `rust-expand-hint` | `**/*.rs` | Suggests macro expansion when macros detected |
+| `rust-bench-hint` | `**/*.rs` | Suggests benchmark run when benchmarks detected |
+
+#### Other
+
+| Hook | Trigger | Description |
+|------|---------|-------------|
+| `markdown-lint-on-edit` | `**/*.md` | Lint markdown files |
+
+## Required Tools
+
+### Core (Included with Rust)
+
+| Tool | Installation | Purpose |
+|------|--------------|---------|
+| `rustfmt` | `rustup component add rustfmt` | Code formatting |
+| `clippy` | `rustup component add clippy` | Linting |
+| `rust-analyzer` | `rustup component add rust-analyzer` | LSP server |
+
+### Recommended Cargo Extensions
+
+| Tool | Installation | Purpose |
+|------|--------------|---------|
+| `cargo-audit` | `cargo install cargo-audit` | Security vulnerability database |
+| `cargo-deny` | `cargo install cargo-deny` | License and security policy |
+| `cargo-outdated` | `cargo install cargo-outdated` | Dependency freshness |
+| `cargo-machete` | `cargo install cargo-machete` | Unused dependencies (fast) |
+
+### Optional Cargo Extensions
+
+| Tool | Installation | Purpose |
+|------|--------------|---------|
+| `cargo-udeps` | `cargo +nightly install cargo-udeps` | Unused dependencies (thorough) |
+| `cargo-semver-checks` | `cargo install cargo-semver-checks` | Semver compatibility |
+| `cargo-geiger` | `cargo install cargo-geiger` | Unsafe code metrics |
+| `cargo-expand` | `cargo install cargo-expand` | Macro expansion |
+| `cargo-bloat` | `cargo install cargo-bloat` | Binary size analysis |
+| `cargo-mutants` | `cargo install cargo-mutants` | Mutation testing |
+
+## Commands
+
+### `/setup`
+
+Interactive setup wizard for configuring the complete Rust development environment.
+
+**What it does:**
+
+1. **Verifies Rust toolchain** - Checks `rustup` and `cargo` installation
+2. **Installs rust-analyzer** - LSP server for IDE features
+3. **Installs nightly toolchain** - Required for `cargo-udeps`
+4. **Installs cargo tools** - All 10 recommended extensions
+5. **Validates LSP config** - Confirms `.lsp.json` is correct
+6. **Initializes deny.toml** - Sets up security/license policy (if needed)
+7. **Verifies hooks** - Confirms hooks are properly loaded
+
+**Usage:**
 
 ```bash
-claude mcp add claude-plugin-template -- node dist/index.js
-claude mcp list
+/setup
 ```
 
-Docs: https://code.claude.com/docs/en/mcp
-
-## Using with Claude Desktop
-
-Claude Desktop MCP servers are typically configured in `claude_desktop_config.json`.
-Common location (macOS): `~/Library/Application Support/Claude/claude_desktop_config.json`.
-Docs: https://modelcontextprotocol.io/docs/develop/connect-local-servers
-
-## What’s included
-
-### 1) MCP server (`src/index.ts`)
-
-This template exposes:
-- Tool: `hello({ name })` → returns “Hello, <name>!”
-- Resource: `template://readme`
-
-Add more tools/resources in `src/index.ts`.
-
-### 2) Claude Code commands (`.claude/commands/*`)
-
-Examples included:
-- `/setup` – install + build sanity check
-- `/mcp [dev|build|start]` – run the MCP server
-- `/github:pr-review <owner/repo#PR>` – review a PR with `gh`
-
-Reminder: nested folders create namespaces, e.g. `.claude/commands/github/pr-review.md` ⇒ `/github:pr-review`.
-Docs: https://code.claude.com/docs/en/slash-commands
-
-### 3) Claude Code hooks (`.claude/settings.json` + `.claude/hooks/*`)
-
-This template includes a minimal **PreToolUse** Bash guard hook that blocks obviously-dangerous shell commands.
-Docs: https://code.claude.com/docs/en/hooks
-
-### 4) “Skills” (`skills/*`)
-
-Put durable team guidance here: conventions, how-to, runbooks.
-
-### 5) GitHub automation (`.github/*`)
-
-- CI (`.github/workflows/ci.yml`) runs `npm ci`, `typecheck`, `build`.
-- Issue templates + PR template.
-- Copilot instructions and reusable prompts.
-
-## Developing new features
-
-### Add a new MCP tool
-
-1) Add `server.tool(...)` in `src/index.ts`.
-2) Run:
+**Quick install command** (from the wizard):
 
 ```bash
-npm run typecheck
-npm run build
+rustup component add rust-analyzer && \
+rustup toolchain install nightly && \
+cargo install cargo-audit cargo-deny cargo-outdated cargo-machete \
+              cargo-semver-checks cargo-geiger cargo-expand cargo-bloat \
+              cargo-mutants && \
+cargo +nightly install cargo-udeps
 ```
 
-### Add a new slash command
+| Command | Description |
+|---------|-------------|
+| `/setup` | Full interactive setup for LSP and all cargo tools |
 
-Create: `.claude/commands/<name>.md`
+## Configuration
 
-Use YAML frontmatter to set `description` and restrict tools via `allowed-tools`.
+### deny.toml
 
-## Security checklist
+If using `cargo-deny`, initialize configuration:
 
-- Never commit tokens or API keys.
-- Prefer `env` entries in `.mcp.json` and local overrides in `.claude/settings.local.json`.
-- Keep hooks fail-open unless you’re confident about payload compatibility.
+```bash
+cargo deny init
+```
+
+This creates `deny.toml` for configuring:
+- Allowed/denied licenses
+- Security advisory settings
+- Duplicate dependency rules
+
+### Customizing Hooks
+
+Edit `hooks/hooks.json` to:
+- Disable hooks by removing entries
+- Adjust output limits (`head -N`)
+- Modify matchers for different file patterns
+- Add project-specific hooks
+
+Example - disable a hook:
+```json
+{
+    "name": "rust-geiger",
+    "enabled": false,
+    ...
+}
+```
+
+## Project Structure
+
+```
+rust-lsp/
+├── .claude/
+│   └── commands/
+│       └── setup.md          # /setup command
+├── .claude-plugin/
+│   └── plugin.json           # Plugin metadata
+├── .lsp.json                  # rust-analyzer configuration
+├── hooks/
+│   └── hooks.json            # 16 automated hooks
+├── CLAUDE.md                  # Project instructions
+└── README.md                  # This file
+```
+
+## Troubleshooting
+
+### rust-analyzer not starting
+
+1. Ensure `Cargo.toml` exists in project root
+2. Run `cargo check` to generate initial build artifacts
+3. Verify installation: `rust-analyzer --version`
+4. Check LSP config: `cat .lsp.json`
+
+### cargo-udeps fails
+
+Requires nightly toolchain:
+```bash
+rustup toolchain install nightly
+rustup component add rust-src --toolchain nightly
+cargo +nightly udeps
+```
+
+### cargo-deny errors
+
+Initialize and update:
+```bash
+cargo deny init
+cargo deny fetch
+```
+
+### Hooks not triggering
+
+1. Verify hooks are loaded: `cat hooks/hooks.json`
+2. Check file patterns match your structure
+3. Ensure required tools are installed (`command -v cargo-audit`)
+
+### Too much output
+
+Reduce `head -N` values in hooks.json for less verbose output.
+
+## License
+
+MIT
