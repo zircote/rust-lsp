@@ -1,0 +1,213 @@
+{
+    "hooks": [
+        {
+            "name": "rust-format-on-edit",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "rustfmt \"$CLAUDE_FILE_PATH\" 2>/dev/null || true"
+                }
+            ],
+            "matcher": "**/*.rs"
+        },
+        {
+            "name": "rust-check-on-edit",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "cargo check --message-format=short 2>&1 | head -20 || true"
+                }
+            ],
+            "matcher": "**/*.rs"
+        },
+        {
+            "name": "rust-clippy-on-edit",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "cargo clippy --message-format=short -- -W clippy::all 2>&1 | head -30 || true"
+                }
+            ],
+            "matcher": "**/*.rs"
+        },
+        {
+            "name": "markdown-lint-on-edit",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "npx markdownlint-cli \"$CLAUDE_FILE_PATH\" 2>&1 | head -20 || true"
+                }
+            ],
+            "matcher": "**/*.md"
+        },
+        {
+            "name": "rust-test-compile-on-edit",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "cargo test --no-run --message-format=short 2>&1 | head -20 || true"
+                }
+            ],
+            "matcher": "**/*.rs"
+        },
+        {
+            "name": "rust-doc-check",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "cargo doc --no-deps --document-private-items 2>&1 | grep -E '(warning|error)' | head -15 || true"
+                }
+            ],
+            "matcher": "**/src/**/*.rs"
+        },
+        {
+            "name": "rust-unused-deps",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "command -v cargo-udeps >/dev/null && cargo +nightly udeps --quiet 2>&1 | head -10 || true"
+                }
+            ],
+            "matcher": "**/Cargo.toml"
+        },
+        {
+            "name": "rust-deny-check",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "[ -f deny.toml ] && cargo deny check 2>&1 | grep -E '(error|warning|WARN)' | head -15 || true"
+                }
+            ],
+            "matcher": "**/Cargo.toml"
+        },
+        {
+            "name": "rust-unsafe-detector",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "grep -n 'unsafe' \"$CLAUDE_FILE_PATH\" 2>/dev/null | head -5 && echo '⚠️  Unsafe code detected' || true"
+                }
+            ],
+            "matcher": "**/*.rs"
+        },
+        {
+            "name": "rust-semver-check",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "command -v cargo-semver-checks >/dev/null && cargo semver-checks check-release 2>&1 | head -20 || true"
+                }
+            ],
+            "matcher": "**/src/lib.rs"
+        },
+        {
+            "name": "rust-audit",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "command -v cargo-audit >/dev/null && cargo audit 2>&1 | head -20 || true"
+                }
+            ],
+            "matcher": "**/Cargo.lock"
+        },
+        {
+            "name": "rust-outdated",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "command -v cargo-outdated >/dev/null && cargo outdated --depth 1 2>&1 | head -15 || true"
+                }
+            ],
+            "matcher": "**/Cargo.toml"
+        },
+        {
+            "name": "rust-machete",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "command -v cargo-machete >/dev/null && cargo machete --skip-target-dir 2>&1 | head -10 || true"
+                }
+            ],
+            "matcher": "**/Cargo.toml"
+        },
+        {
+            "name": "rust-geiger",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "command -v cargo-geiger >/dev/null && cargo geiger --update-readme --output-format ratio 2>&1 | tail -5 || true"
+                }
+            ],
+            "matcher": "**/Cargo.toml"
+        },
+        {
+            "name": "rust-mutants-hint",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "command -v cargo-mutants >/dev/null && echo \"💡 Mutation test: cargo mutants --file \\\"$CLAUDE_FILE_PATH\\\"\" || true"
+                }
+            ],
+            "matcher": "**/src/**/*.rs"
+        },
+        {
+            "name": "rust-bloat-hint",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "command -v cargo-bloat >/dev/null && echo \"💡 Size analysis: cargo bloat --release --crates\" || true"
+                }
+            ],
+            "matcher": "**/Cargo.toml"
+        },
+        {
+            "name": "rust-expand-hint",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "grep -qE '#\\[derive|macro_rules!' \"$CLAUDE_FILE_PATH\" && echo \"💡 Expand macros: cargo expand\" || true"
+                }
+            ],
+            "matcher": "**/*.rs"
+        },
+        {
+            "name": "rust-todo-fixme",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "grep -nE '(TODO|FIXME|XXX|HACK):?' \"$CLAUDE_FILE_PATH\" 2>/dev/null | head -10 || true"
+                }
+            ],
+            "matcher": "**/*.rs"
+        },
+        {
+            "name": "rust-bench-hint",
+            "event": "afterWrite",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "grep -qE '#\\[bench\\]|criterion' \"$CLAUDE_FILE_PATH\" && echo \"💡 Run benchmarks: cargo bench\" || true"
+                }
+            ],
+            "matcher": "**/*.rs"
+        }
+    ]
+}
