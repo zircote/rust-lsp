@@ -1,40 +1,67 @@
-# CLAUDE.md (project context)
+# CLAUDE.md
 
-This repository is a **template** for building Claude Code automations and MCP servers.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Repo goals
+## Project Overview
 
-- Be easy to fork.
-- Provide a sane default MCP server in TypeScript.
-- Provide examples of Claude Code commands and hooks.
+A Claude Code plugin providing Rust development support through rust-analyzer LSP integration and 18 automated hooks for code quality, security, and dependency analysis.
 
-## Key files
+## Setup
 
-- `.mcp.json`: Claude Code MCP server configuration (project-scoped).
-- `.claude/settings.json`: Hook configuration.
-- `.claude/commands/`: Custom commands that show up as `/...`.
-- `.claude/hooks/`: Hook scripts.
-- `src/index.ts`: MCP server entrypoint.
+Run `/setup` to install all required tools, or manually:
 
-## Development conventions
+```bash
+rustup component add rust-analyzer
+rustup toolchain install nightly
+cargo install cargo-audit cargo-deny cargo-outdated cargo-machete \
+              cargo-semver-checks cargo-geiger cargo-expand cargo-bloat \
+              cargo-mutants
+cargo +nightly install cargo-udeps
+```
 
-- Prefer minimal diffs.
-- Keep scripts safe and portable.
-- Keep documentation in sync (README + skills files).
+## Key Files
 
-## When adding tools
+| File | Purpose |
+|------|---------|
+| `.lsp.json` | rust-analyzer LSP configuration |
+| `hooks/hooks.json` | 18 automated development hooks |
+| `commands/setup.md` | `/setup` command definition |
+| `.claude-plugin/plugin.json` | Plugin metadata |
 
-- Use `zod` schemas.
-- Return text via `{ content: [{ type: "text", text: "..." }] }`.
-- Avoid side effects by default; require explicit user intent for destructive operations.
+## Hook System
 
-## When adding hooks
+All hooks trigger `afterWrite`. Hooks use `command -v` checks to skip gracefully when optional tools aren't installed.
 
-- Hooks are configured in `.claude/settings.json`.
-- Keep hooks fast and deterministic.
-- Prefer blocking only high-confidence dangerous operations.
+**Hook categories:**
+- **Core** (`**/*.rs`): format, check, clippy, test compile
+- **Quality** (`**/*.rs`, `**/src/**/*.rs`): doc-check, todo/fixme, unsafe detector
+- **Deps** (`**/Cargo.toml`, `**/Cargo.lock`): audit, deny, outdated, machete, udeps
+- **Analysis** (`**/src/lib.rs`, `**/Cargo.toml`): semver-checks, geiger
+- **Hints** (`**/*.rs`, `**/Cargo.toml`): mutants, bloat, expand, bench suggestions
 
-Docs:
-- Hooks: https://code.claude.com/docs/en/hooks
-- Slash commands: https://code.claude.com/docs/en/slash-commands
-- MCP: https://code.claude.com/docs/en/mcp
+## When Modifying Hooks
+
+Edit `hooks/hooks.json`. Each hook follows this pattern:
+
+```json
+{
+    "name": "hook-name",
+    "event": "afterWrite",
+    "hooks": [{ "type": "command", "command": "..." }],
+    "matcher": "**/*.rs"
+}
+```
+
+- Use `|| true` to prevent hook failures from blocking writes
+- Use `head -N` to limit output verbosity
+- Use `command -v tool >/dev/null &&` for optional tool dependencies
+
+## When Modifying LSP Config
+
+Edit `.lsp.json`. The `extensionToLanguage` map controls which files use the LSP. Current config maps `.rs` files to the `rust` language server.
+
+## Conventions
+
+- Prefer minimal diffs
+- Keep hooks fast (use `--message-format=short`, limit output with `head`)
+- Documentation changes: update both README.md and commands/setup.md if relevant
