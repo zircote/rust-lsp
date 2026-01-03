@@ -1,18 +1,18 @@
 {
-    "name": "rust-lsp",
-    "version": "0.1.2",
-    "description": "Rust language server",
-    "author": {
-        "name": "zircote",
-        "email": "zircote@gmail.com"
-    },
-    "repository": "https://github.com/zircote/rust-lsp",
-    "license": "MIT",
-    "keywords": [
-        "rust",
-        "lsp",
-        "language-server",
-        "claude-plugin",
-        "code-assistant"
-    ]
+  "name": "rust-lsp",
+  "version": "0.1.3",
+  "description": "Rust language server",
+  "author": {
+    "name": "zircote",
+    "email": "zircote@gmail.com"
+  },
+  "repository": "https://github.com/zircote/rust-lsp",
+  "license": "MIT",
+  "keywords": [
+    "rust",
+    "lsp",
+    "language-server",
+    "claude-plugin",
+    "code-assistant"
+  ]
 }
