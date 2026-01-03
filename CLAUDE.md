@@ -30,14 +30,17 @@ cargo +nightly install cargo-udeps
 
 ## Hook System
 
-All hooks trigger `afterWrite`. Hooks use `command -v` checks to skip gracefully when optional tools aren't installed.
+Hooks trigger on `PostToolUse` for Write/Edit operations. Designed to be **fast and non-blocking**.
 
-**Hook categories:**
-- **Core** (`**/*.rs`): format, check, clippy, test compile
-- **Quality** (`**/*.rs`, `**/src/**/*.rs`): doc-check, todo/fixme, unsafe detector
-- **Deps** (`**/Cargo.toml`, `**/Cargo.lock`): audit, deny, outdated, machete, udeps
-- **Analysis** (`**/src/lib.rs`, `**/Cargo.toml`): semver-checks, geiger
-- **Hints** (`**/*.rs`, `**/Cargo.toml`): mutants, bloat, expand, bench suggestions
+**What hooks execute (instant):**
+- **`.rs` files**: `rustfmt` (single file), grep for unsafe/TODO/FIXME
+- **`.md` files**: `markdownlint` (if available)
+- **`Cargo.toml`/`Cargo.lock`**: hints only (no cargo execution)
+
+**On-demand commands (shown as hints, run manually):**
+- `cargo check && cargo clippy && cargo test`
+- `cargo audit && cargo outdated --depth 1`
+- `cargo machete` (find unused deps)
 
 ## When Modifying Hooks
 
