@@ -9,7 +9,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cargo fmt -- $CLAUDE_FILE_PATHS 2>/dev/null || cd \"$CLAUDE_PROJECT_DIR\" && cargo fmt 2>/dev/null || true"
+            "command": "cargo fmt -- $CLAUDE_FILE_PATHS 2>/dev/null || cd \"$CLAUDE_PROJECT_DIR\" && cargo fmt 2>/dev/null || true",
+            "timeout": 120
           }
         ],
         "conditions": {
@@ -23,7 +24,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$CLAUDE_PROJECT_DIR\" && cargo check --message-format=short 2>&1 | grep -E '^error' | head -10 || true"
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && cargo check --message-format=short 2>&1 | grep -E '^error' | head -10 || true",
+            "timeout": 120
           }
         ],
         "conditions": {
@@ -37,7 +39,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$CLAUDE_PROJECT_DIR\" && cargo clippy --message-format=short 2>&1 | grep -E '^(warning|error)' | head -10 || true"
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && cargo clippy --message-format=short 2>&1 | grep -E '^(warning|error)' | head -10 || true",
+            "timeout": 120
           }
         ],
         "conditions": {
@@ -54,6 +57,7 @@
           {
             "type": "command",
             "command": "if echo \"$CLAUDE_TOOL_INPUT\" | grep -qE 'git commit'; then cd \"$CLAUDE_PROJECT_DIR\" && cargo fmt -- --check && cargo clippy -- -D warnings && cargo test; fi",
+            "timeout": 180,
             "blocking": true
           }
         ]
